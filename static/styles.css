@@ -7,9 +7,7 @@
   --err: #b00020;
 }
 
-* {
-  box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
@@ -19,54 +17,33 @@ body {
   font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
 }
 
-header h1 {
-  margin: 0 0 12px 0;
-}
-
-h2 {
-  margin: 16px 0 8px;
-}
-
-input,
-select,
-button {
-  padding: 10px;
-  font-size: 16px;
-}
-
-button {
-  cursor: pointer;
-}
+header h1 { margin: 0 0 8px 0; }
+h2 { margin: 16px 0 8px; }
 
 .controls,
 .row {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  align-items: center;
 }
 
-.controls input,
-.row input,
-.row select {
-  flex: 1;
-  min-width: 140px;
+input, select, button {
+  padding: 10px;
+  font-size: 16px;
 }
 
-.status {
-  margin: 8px 0;
-}
+button { cursor: pointer; }
 
-.muted {
-  color: var(--muted);
-}
+.controls select { flex: 2; min-width: 220px; }
+.controls input { flex: 1; min-width: 120px; }
 
-.ok {
-  color: var(--ok);
-}
+.row input, .row select { flex: 1; min-width: 140px; }
 
-.error {
-  color: var(--err);
-}
+.status { margin: 8px 0; }
+.muted { color: var(--muted); }
+.ok { color: var(--ok); }
+.error { color: var(--err); }
 
 .card {
   border: 1px solid var(--border);
@@ -75,9 +52,7 @@ button {
   margin: 12px 0;
 }
 
-.hidden {
-  display: none;
-}
+.hidden { display: none; }
 
 .entry {
   border: 1px solid var(--border);
@@ -86,6 +61,29 @@ button {
   margin: 8px 0;
 }
 
-.entry b {
-  font-weight: 600;
+.badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 8px;
+}
+
+.badge {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 6px 10px;
+  font-size: 14px;
+}
+
+.checkbox {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+option.bad {
+  color: var(--err);
 }

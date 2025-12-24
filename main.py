@@ -7,27 +7,42 @@ from typing import Any, Optional
 from urllib.parse import parse_qsl
 
 import httpx
-from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-load_dotenv()
-
-N8N_WEBHOOK_URL = os.environ.get('N8N_WEBHOOK_URL')
+N8N_BASE_URL = os.environ.get('N8N_BASE_URL')
+WEBHOOK_PATH_FUEL = os.environ.get('WEBHOOK_PATH_FUEL')
+WEBHOOK_PATH_VEHICLES = os.environ.get('WEBHOOK_PATH_VEHICLES')
 N8N_WEBHOOK_TOKEN = os.environ.get('N8N_WEBHOOK_TOKEN')
 TG_BOT_TOKEN = os.environ.get('TG_BOT_TOKEN')
 
 app = FastAPI()
+app.mount('/static', StaticFiles(directory='static'), name='static')
 
 
 def _require_env() -> None:
-  if not N8N_WEBHOOK_URL:
-    raise RuntimeError('N8N_WEBHOOK_URL is not set')
+  missing = []
+  if not N8N_BASE_URL:
+    missing.append('N8N_BASE_URL')
+  if not WEBHOOK_PATH_FUEL:
+    missing.append('WEBHOOK_PATH_FUEL')
+  if not WEBHOOK_PATH_VEHICLES:
+    missing.append('WEBHOOK_PATH_VEHICLES')
   if not N8N_WEBHOOK_TOKEN:
-    raise RuntimeError('N8N_WEBHOOK_TOKEN is not set')
+    missing.append('N8N_WEBHOOK_TOKEN')
   if not TG_BOT_TOKEN:
-    raise RuntimeError('TG_BOT_TOKEN is not set')
+    missing.append('TG_BOT_TOKEN')
+  if missing:
+    raise RuntimeError(f'Missing env: {", ".join(missing)}')
+
+
+def _join_url(base: str, path: str) -> str:
+  return base.rstrip('/') + '/' + path.lstrip('/')
+
+
+def _is_cloudflare_525(body: str) -> bool:
+  return 'SSL handshake failed' in body and 'Error code 525' in body
 
 
 def _validate_init_data(init_data: str, max_age_sec: int = 24 * 60 * 60) -> dict[str, str]:
@@ -68,46 +83,89 @@ def _validate_init_data(init_data: str, max_age_sec: int = 24 * 60 * 60) -> dict
   return pairs
 
 
-def _require_user(pairs: dict[str, str]) -> dict[str, Any]:
+def _get_user_id(pairs: dict[str, str]) -> int:
   user_raw = pairs.get('user')
   if not user_raw:
     raise HTTPException(status_code=401, detail='No user in init data')
   try:
-    return json.loads(user_raw)
+    user = json.loads(user_raw)
   except Exception:
     raise HTTPException(status_code=401, detail='Bad user payload in init data')
 
+  user_id = user.get('id')
+  if not isinstance(user_id, int):
+    raise HTTPException(status_code=401, detail='No user id in init data')
+  return user_id
 
-async def _proxy_get(params: dict[str, Any]) -> Any:
+
+async def _proxy_get(url: str, params: dict[str, Any]) -> Any:
   async with httpx.AsyncClient(timeout=20) as client:
-    r = await client.get(
-      N8N_WEBHOOK_URL,
-      params=params,
-      headers={'X-Auth-Token': N8N_WEBHOOK_TOKEN},
-    )
+    r = await client.get(url, params=params, headers={'X-Auth-Token': N8N_WEBHOOK_TOKEN})
+
+  ct = (r.headers.get('content-type') or '').lower()
+  text = r.text
+
   if r.status_code >= 400:
-    raise HTTPException(status_code=r.status_code, detail=r.text)
+    if r.status_code == 525 or _is_cloudflare_525(text):
+      raise HTTPException(status_code=503, detail={'code': 'CF_525', 'message': 'Upstream SSL handshake failed'})
+    raise HTTPException(status_code=r.status_code, detail={'code': 'UPSTREAM_ERROR', 'message': text[:400]})
+
+  if 'application/json' not in ct:
+    if _is_cloudflare_525(text):
+      raise HTTPException(status_code=503, detail={'code': 'CF_525', 'message': 'Upstream SSL handshake failed'})
+    raise HTTPException(
+      status_code=502,
+      detail={'code': 'BAD_UPSTREAM_CONTENT', 'message': f'Expected JSON, got {ct or "unknown"}'},
+    )
+
   return r.json()
 
 
-async def _proxy_post(payload: dict[str, Any]) -> Any:
+async def _proxy_post(url: str, payload: dict[str, Any]) -> Any:
   async with httpx.AsyncClient(timeout=20) as client:
-    r = await client.post(
-      N8N_WEBHOOK_URL,
-      json=payload,
-      headers={'X-Auth-Token': N8N_WEBHOOK_TOKEN},
-    )
+    r = await client.post(url, json=payload, headers={'X-Auth-Token': N8N_WEBHOOK_TOKEN})
+
+  ct = (r.headers.get('content-type') or '').lower()
+  text = r.text
+
   if r.status_code >= 400:
-    raise HTTPException(status_code=r.status_code, detail=r.text)
-  try:
-    return r.json()
-  except Exception:
-    return {'ok': True}
+    if r.status_code == 525 or _is_cloudflare_525(text):
+      raise HTTPException(status_code=503, detail={'code': 'CF_525', 'message': 'Upstream SSL handshake failed'})
+    raise HTTPException(status_code=r.status_code, detail={'code': 'UPSTREAM_ERROR', 'message': text[:400]})
+
+  if 'application/json' in ct:
+    try:
+      return r.json()
+    except Exception:
+      return {'ok': True}
+
+  if _is_cloudflare_525(text):
+    raise HTTPException(status_code=503, detail={'code': 'CF_525', 'message': 'Upstream SSL handshake failed'})
+
+  return {'ok': True}
 
 
 @app.get('/')
 async def index():
   return FileResponse('static/index.html')
+
+
+@app.get('/api/vehicles')
+async def get_vehicles(
+  vehicle_id: Optional[str] = None,
+  x_tg_init_data: Optional[str] = Header(default=None, alias='X-Tg-Init-Data'),
+):
+  _require_env()
+  pairs = _validate_init_data(x_tg_init_data or '')
+  user_id = _get_user_id(pairs)
+
+  url = _join_url(N8N_BASE_URL, WEBHOOK_PATH_VEHICLES)
+  params: dict[str, Any] = {'user_id': user_id}
+  if vehicle_id:
+    params['vehicle_id'] = vehicle_id
+
+  data = await _proxy_get(url, params)
+  return JSONResponse(content=data)
 
 
 @app.get('/api/fuel')
@@ -118,13 +176,19 @@ async def get_fuel(
 ):
   _require_env()
   pairs = _validate_init_data(x_tg_init_data or '')
-  _require_user(pairs)
+  user_id = _get_user_id(pairs)
 
-  params: dict[str, Any] = {'limit': limit}
-  if vehicle_id:
-    params['vehicle_id'] = vehicle_id
+  if not vehicle_id:
+    raise HTTPException(status_code=400, detail='vehicle_id is required')
 
-  data = await _proxy_get(params)
+  url_v = _join_url(N8N_BASE_URL, WEBHOOK_PATH_VEHICLES)
+  vehicles = await _proxy_get(url_v, {'user_id': user_id, 'vehicle_id': vehicle_id})
+  if not vehicles:
+    raise HTTPException(status_code=403, detail='Vehicle is not allowed')
+
+  url = _join_url(N8N_BASE_URL, WEBHOOK_PATH_FUEL)
+  params: dict[str, Any] = {'limit': limit, 'vehicle_id': vehicle_id}
+  data = await _proxy_get(url, params)
   return JSONResponse(content=data)
 
 
@@ -135,11 +199,18 @@ async def post_fuel(
 ):
   _require_env()
   pairs = _validate_init_data(x_tg_init_data or '')
-  _require_user(pairs)
+  user_id = _get_user_id(pairs)
 
   payload = await request.json()
-  data = await _proxy_post(payload)
+  vehicle_id = payload.get('vehicle_id')
+  if not isinstance(vehicle_id, str) or not vehicle_id:
+    raise HTTPException(status_code=400, detail='vehicle_id is required')
+
+  url_v = _join_url(N8N_BASE_URL, WEBHOOK_PATH_VEHICLES)
+  vehicles = await _proxy_get(url_v, {'user_id': user_id, 'vehicle_id': vehicle_id})
+  if not vehicles:
+    raise HTTPException(status_code=403, detail='Vehicle is not allowed')
+
+  url = _join_url(N8N_BASE_URL, WEBHOOK_PATH_FUEL)
+  data = await _proxy_post(url, payload)
   return JSONResponse(content=data)
-
-
-app.mount('/static', StaticFiles(directory='static'), name='static')
