@@ -50,8 +50,17 @@ def _validate_init_data(init_data: str, max_age_sec: int = 24 * 60 * 60) -> dict
 
   data_check_string = '\n'.join([f'{k}={v}' for k, v in sorted(pairs.items(), key=lambda x: x[0])])
 
-  secret_key = hashlib.sha256(TG_BOT_TOKEN.encode('utf-8')).digest()
-  calculated_hash = hmac.new(secret_key, data_check_string.encode('utf-8'), hashlib.sha256).hexdigest()
+  secret_key = hmac.new(
+    key=b'WebAppData',
+    msg=TG_BOT_TOKEN.encode('utf-8'),
+    digestmod=hashlib.sha256,
+  ).digest()
+
+  calculated_hash = hmac.new(
+    key=secret_key,
+    msg=data_check_string.encode('utf-8'),
+    digestmod=hashlib.sha256,
+  ).hexdigest()
 
   if not hmac.compare_digest(calculated_hash, received_hash):
     raise HTTPException(status_code=401, detail='Bad init data signature')
