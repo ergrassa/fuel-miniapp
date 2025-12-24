@@ -83,7 +83,7 @@ def _validate_init_data(init_data: str, max_age_sec: int = 24 * 60 * 60) -> dict
   return pairs
 
 
-def _get_user_id(pairs: dict[str, str]) -> int:
+def _get_user_id(pairs: dict[str, str]) -> str:
   user_raw = pairs.get('user')
   if not user_raw:
     raise HTTPException(status_code=401, detail='No user in init data')
@@ -93,9 +93,12 @@ def _get_user_id(pairs: dict[str, str]) -> int:
     raise HTTPException(status_code=401, detail='Bad user payload in init data')
 
   user_id = user.get('id')
-  if not isinstance(user_id, int):
-    raise HTTPException(status_code=401, detail='No user id in init data')
-  return user_id
+  if isinstance(user_id, int):
+    return str(user_id)
+  if isinstance(user_id, str) and user_id.strip():
+    return user_id.strip()
+
+  raise HTTPException(status_code=401, detail='No user id in init data')
 
 
 async def _proxy_get(url: str, params: dict[str, Any]) -> Any:
