@@ -1,0 +1,4 @@
+httpx>=0.28.1
+python-dotenv>=1.2.1
+fastapi>=0.127.0
+uvicorn>=0.40.0
