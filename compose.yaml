@@ -1,5 +1,5 @@
 services:
-  bishop:
+  fuel-miniapp:
     image: ghcr.io/ergrassa/fuel-miniapp:latest
     container_name: fuel-miniapp
     env_file:
