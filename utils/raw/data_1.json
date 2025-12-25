@@ -1,0 +1,191 @@
+[
+  {
+    "period": { "start": "2025-11-26", "end": "2025-12-21" },
+    "days": 25,
+    "fuel_liters": 33.29,
+    "distance_km": 456,
+    "avg_consumption_l_per_100km": 7.3
+  },
+  {
+    "period": { "start": "2025-10-26", "end": "2025-11-26" },
+    "days": 31,
+    "fuel_liters": 27.83,
+    "distance_km": 411,
+    "avg_consumption_l_per_100km": 6.8
+  },
+  {
+    "period": { "start": "2025-10-14", "end": "2025-10-26" },
+    "days": 12,
+    "fuel_liters": 19.85,
+    "distance_km": 278,
+    "avg_consumption_l_per_100km": 7.1
+  },
+  {
+    "period": { "start": "2025-09-28", "end": "2025-10-14" },
+    "days": 16,
+    "fuel_liters": 34.31,
+    "distance_km": 477,
+    "avg_consumption_l_per_100km": 7.2
+  },
+  {
+    "period": { "start": "2025-09-10", "end": "2025-09-28" },
+    "days": 18,
+    "fuel_liters": 40.61,
+    "distance_km": 647,
+    "avg_consumption_l_per_100km": 6.3
+  },
+  {
+    "period": { "start": "2025-08-24", "end": "2025-09-10" },
+    "days": 17,
+    "fuel_liters": 40.04,
+    "distance_km": 543,
+    "avg_consumption_l_per_100km": 7.4
+  },
+  {
+    "period": { "start": "2025-08-14", "end": "2025-08-24" },
+    "days": 10,
+    "fuel_liters": 40.01,
+    "distance_km": 660,
+    "avg_consumption_l_per_100km": 6.1
+  },
+  {
+    "period": { "start": "2025-08-03", "end": "2025-08-14" },
+    "days": 11,
+    "fuel_liters": 17.01,
+    "distance_km": 282,
+    "avg_consumption_l_per_100km": 6.0
+  },
+  {
+    "period": { "start": "2025-07-23", "end": "2025-08-03" },
+    "days": 11,
+    "fuel_liters": 29.21,
+    "distance_km": 436,
+    "avg_consumption_l_per_100km": 6.7
+  },
+  {
+    "period": { "start": "2025-07-16", "end": "2025-07-23" },
+    "days": 7,
+    "fuel_liters": 40.41,
+    "distance_km": 674,
+    "avg_consumption_l_per_100km": 6.0
+  },
+  {
+    "period": { "start": "2025-07-05", "end": "2025-07-16" },
+    "days": 11,
+    "fuel_liters": 31.42,
+    "distance_km": 497,
+    "avg_consumption_l_per_100km": 6.3
+  },
+  {
+    "period": { "start": "2025-06-27", "end": "2025-07-05" },
+    "days": 8,
+    "fuel_liters": 30.18,
+    "distance_km": 464,
+    "avg_consumption_l_per_100km": 6.5
+  },
+  {
+    "period": { "start": "2025-05-31", "end": "2025-06-27" },
+    "days": 27,
+    "fuel_liters": 42.43,
+    "distance_km": 637,
+    "avg_consumption_l_per_100km": 6.7
+  },
+  {
+    "period": { "start": "2025-05-16", "end": "2025-05-31" },
+    "days": 15,
+    "fuel_liters": 36.29,
+    "distance_km": 535,
+    "avg_consumption_l_per_100km": 6.8
+  },
+  {
+    "period": { "start": "2025-05-01", "end": "2025-05-16" },
+    "days": 15,
+    "fuel_liters": 41.00,
+    "distance_km": 661,
+    "avg_consumption_l_per_100km": 6.2
+  },
+  {
+    "period": { "start": "2025-04-11", "end": "2025-05-01" },
+    "days": 20,
+    "fuel_liters": 34.65,
+    "distance_km": 498,
+    "avg_consumption_l_per_100km": 7.0
+  },
+  {
+    "period": { "start": "2025-03-25", "end": "2025-04-11" },
+    "days": 17,
+    "fuel_liters": 28.21,
+    "distance_km": 433,
+    "avg_consumption_l_per_100km": 6.5
+  },
+  {
+    "period": { "start": "2025-03-03", "end": "2025-03-25" },
+    "days": 22,
+    "fuel_liters": 35.62,
+    "distance_km": 532,
+    "avg_consumption_l_per_100km": 6.7
+  },
+  {
+    "period": { "start": "2025-02-21", "end": "2025-03-03" },
+    "days": 10,
+    "fuel_liters": 34.80,
+    "distance_km": 542,
+    "avg_consumption_l_per_100km": 6.4
+  },
+  {
+    "period": { "start": "2025-02-04", "end": "2025-02-21" },
+    "days": 17,
+    "fuel_liters": 14.47,
+    "distance_km": 247,
+    "avg_consumption_l_per_100km": 5.9
+  },
+  {
+    "period": { "start": "2025-01-21", "end": "2025-02-04" },
+    "days": 14,
+    "fuel_liters": 27.24,
+    "distance_km": 302,
+    "avg_consumption_l_per_100km": 9.0
+  },
+  {
+    "period": { "start": "2025-01-06", "end": "2025-01-21" },
+    "days": 15,
+    "fuel_liters": 25.70,
+    "distance_km": 368,
+    "avg_consumption_l_per_100km": 7.0
+  },
+  {
+    "period": { "start": "2024-12-24", "end": "2025-01-06" },
+    "days": 13,
+    "fuel_liters": 39.59,
+    "distance_km": 549,
+    "avg_consumption_l_per_100km": 7.2
+  },
+  {
+    "period": { "start": "2024-12-10", "end": "2024-12-24" },
+    "days": 14,
+    "fuel_liters": 27.10,
+    "distance_km": 322,
+    "avg_consumption_l_per_100km": 8.4
+  },
+  {
+    "period": { "start": "2024-11-22", "end": "2024-12-10" },
+    "days": 18,
+    "fuel_liters": 31.00,
+    "distance_km": 397,
+    "avg_consumption_l_per_100km": 7.8
+  },
+  {
+    "period": { "start": "2024-11-08", "end": "2024-11-22" },
+    "days": 14,
+    "fuel_liters": 27.90,
+    "distance_km": 343,
+    "avg_consumption_l_per_100km": 8.1
+  },
+  {
+    "period": { "start": "2024-10-19", "end": "2024-11-08" },
+    "days": 20,
+    "fuel_liters": 34.00,
+    "distance_km": 310,
+    "avg_consumption_l_per_100km": 11.0
+  }
+]

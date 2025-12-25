@@ -14,7 +14,12 @@ const fuelGradeSel = $('fuelGrade')
 let vehicles = []
 let currentVehicle = null
 
-const gradeUniverse = ['92', '95', '98', '100', 'diesel', 'e85']
+const gradeUniverse = [
+  '80', '92', '92+', '95', '95+', '98', '98+', '100',
+  'D', 'DW', 'DA',
+  'E10', 'E85',
+  'H2', 'CNG', 'LPG',
+]
 
 function setStatus(text, kind = 'muted') {
   statusEl.className = `status ${kind}`

@@ -7,10 +7,14 @@ from typing import Any, Optional
 from urllib.parse import parse_qsl
 
 import httpx
+from dotenv import load_dotenv
 from fastapi import FastAPI, Header, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+load_dotenv()
+DEV_MODE = os.environ.get('DEV_MODE', '').lower() in ('1', 'true', 'yes')
+DEV_USER_ID = os.environ.get('DEV_USER_ID')
 N8N_BASE_URL = os.environ.get('N8N_BASE_URL')
 WEBHOOK_PATH_FUEL = os.environ.get('WEBHOOK_PATH_FUEL')
 WEBHOOK_PATH_VEHICLES = os.environ.get('WEBHOOK_PATH_VEHICLES')
@@ -83,10 +87,19 @@ def _validate_init_data(init_data: str, max_age_sec: int = 24 * 60 * 60) -> dict
   return pairs
 
 
-def _get_user_id(pairs: dict[str, str]) -> str:
+def _get_user_id(pairs: Optional[dict[str, str]]) -> str:
+  if DEV_MODE:
+    if not DEV_USER_ID:
+      raise RuntimeError('DEV_MODE enabled but DEV_USER_ID is not set')
+    return str(DEV_USER_ID)
+
+  if not pairs:
+    raise HTTPException(status_code=401, detail='Missing Telegram init data')
+
   user_raw = pairs.get('user')
   if not user_raw:
     raise HTTPException(status_code=401, detail='No user in init data')
+
   try:
     user = json.loads(user_raw)
   except Exception:
@@ -159,7 +172,10 @@ async def get_vehicles(
   x_tg_init_data: Optional[str] = Header(default=None, alias='X-Tg-Init-Data'),
 ):
   _require_env()
-  pairs = _validate_init_data(x_tg_init_data or '')
+  pairs = None
+  if not DEV_MODE:
+    pairs = _validate_init_data(x_tg_init_data or '')
+
   user_id = _get_user_id(pairs)
 
   url = _join_url(N8N_BASE_URL, WEBHOOK_PATH_VEHICLES)
@@ -178,7 +194,10 @@ async def get_fuel(
   x_tg_init_data: Optional[str] = Header(default=None, alias='X-Tg-Init-Data'),
 ):
   _require_env()
-  pairs = _validate_init_data(x_tg_init_data or '')
+  pairs = None
+  if not DEV_MODE:
+    pairs = _validate_init_data(x_tg_init_data or '')
+
   user_id = _get_user_id(pairs)
 
   if not vehicle_id:
@@ -201,7 +220,10 @@ async def post_fuel(
   x_tg_init_data: Optional[str] = Header(default=None, alias='X-Tg-Init-Data'),
 ):
   _require_env()
-  pairs = _validate_init_data(x_tg_init_data or '')
+  pairs = None
+  if not DEV_MODE:
+    pairs = _validate_init_data(x_tg_init_data or '')
+
   user_id = _get_user_id(pairs)
 
   payload = await request.json()
