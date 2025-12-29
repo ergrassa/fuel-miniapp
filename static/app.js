@@ -21,6 +21,54 @@ const gradeUniverse = [
   'H2', 'CNG', 'LPG',
 ]
 
+function el(id) {
+  return document.getElementById(id)
+}
+
+function setVal(id, v) {
+  const e = el(id)
+  if (!e) return
+  e.value = v
+}
+
+function setChecked(id, v) {
+  const e = el(id)
+  if (!e) return
+  e.checked = !!v
+}
+
+function parseDateMs(x) {
+  const t = Date.parse(String(x || ''))
+  return Number.isFinite(t) ? t : 0
+}
+
+function getLatestEntry(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return null
+  return rows.reduce((best, r) => {
+    const tb = parseDateMs(best?.refuel_date)
+    const tr = parseDateMs(r?.refuel_date)
+    return tr >= tb ? r : best
+  }, rows[0])
+}
+
+function prefillFormFromLatest(latest) {
+  if (!latest) return
+
+  const mileage = Number(latest.mileage)
+  if (Number.isFinite(mileage)) setVal('mileage', String(mileage))
+
+  const ppl = Number(latest.price_per_liter)
+  if (Number.isFinite(ppl)) setVal('pricePerLiter', String(ppl))
+
+  if (typeof latest.is_full === 'boolean') setChecked('isFull', latest.is_full)
+
+  if (latest.fuel_grade) {
+    const g = String(latest.fuel_grade)
+    const has = Array.from(fuelGradeSel.options).some((o) => o.value === g)
+    if (has) fuelGradeSel.value = g
+  }
+}
+
 function setStatus(text, kind = 'muted') {
   statusEl.className = `status ${kind}`
   statusEl.textContent = text
@@ -50,7 +98,13 @@ async function readError(r) {
 
 function fmtDate(iso) {
   try {
-    return new Date(iso).toLocaleString('ru-RU')
+    return new Date(iso).toLocaleString('ru-RU', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
   } catch {
     return iso
   }
@@ -210,13 +264,53 @@ function render(rows) {
       const el = document.createElement('div')
       el.className = 'entry'
       el.innerHTML = `
-        <b>${r.vehicle_id}</b> <span class="muted">#${r.id ?? ''}</span><br/>
-        ${fmtDate(r.refuel_date)} ${r.is_full ? '✅ полный' : '⚪️'}<br/>
-        ${r.mileage} км · ${Number(r.fuel_added).toFixed(2)} л · ${Number(r.price_per_liter).toFixed(2)}/л · <b>${cost.toFixed(2)}</b>
-        ${r.fuel_grade ? `<br/><span class="muted">топливо: ${r.fuel_grade}</span>` : ''}
+        <span class="muted">#${r.id ?? ''}</span>&nbsp;
+        ${fmtDate(r.refuel_date)} ${r.is_full ? '✅ полный' : '⚪️'}&nbsp;
+        ${r.mileage} км · ${Number(r.fuel_added).toFixed(2)} л ${r.fuel_grade ? `<span class="muted">(${r.fuel_grade})</span>` : ''} · ${Number(r.price_per_liter).toFixed(2)}/л · <b>${cost.toFixed(2)} ₽</b>
+        
       `
       listEl.appendChild(el)
     })
+}
+
+function parseDateMs(x) {
+  const t = Date.parse(x)
+  return Number.isFinite(t) ? t : 0
+}
+
+function getLatestEntry(rows) {
+  if (!Array.isArray(rows) || rows.length === 0) return null
+  let best = rows[0]
+  let bestT = parseDateMs(rows[0]?.refuel_date)
+  for (const r of rows) {
+    const t = parseDateMs(r?.refuel_date)
+    if (t >= bestT) {
+      best = r
+      bestT = t
+    }
+  }
+  return best || null
+}
+
+function prefillFormFromLatest(latest) {
+  if (!latest) return
+
+  const mileage = Number(latest.mileage)
+  if (Number.isFinite(mileage)) $('mileage').value = String(mileage)
+
+  const ppl = Number(latest.price_per_liter)
+  if (Number.isFinite(ppl)) $('pricePerLiter').value = String(ppl)
+
+  const fuelAdded = Number(latest.fuel_added)
+  if (Number.isFinite(fuelAdded)) $('fuelAdded').value = String(fuelAdded)
+
+  if (typeof latest.is_full === 'boolean') $('isFull').checked = latest.is_full
+
+  if (latest.fuel_grade) {
+    const g = String(latest.fuel_grade)
+    const has = Array.from(fuelGradeSel.options).some((o) => o.value === g)
+    if (has) fuelGradeSel.value = g
+  }
 }
 
 async function reload() {
@@ -227,6 +321,9 @@ async function reload() {
     const rows = await apiGetFuel(limit, currentVehicle.vehicle_id)
     setStatus(`Ок: ${rows.length} записей`, 'ok')
     render(rows)
+
+    const latest = getLatestEntry(rows)
+    prefillFormFromLatest(latest)
   } catch (e) {
     setStatus(`Ошибка: ${e.message}`, 'error')
   }

@@ -25,9 +25,9 @@
     <section class="form">
       <h2>Добавить заправку</h2>
       <div class="row">
-        <input id="mileage" type="number" step="1" placeholder="Пробег (км)" />
-        <input id="fuelAdded" type="number" step="0.01" placeholder="Литры" />
-        <input id="pricePerLiter" type="number" step="0.01" placeholder="Цена/л" />
+        <input id="mileage" inputmode="numeric" pattern="[0-9]*" placeholder="Пробег (км)" />
+        <input id="fuelAdded" type="number" step="0.01" inputmode="decimal" placeholder="Литры" />
+        <input id="pricePerLiter" inputmode="decimal" placeholder="Цена/л" />
         <select id="fuelGrade"></select>
         <label class="checkbox">
           <input id="isFull" type="checkbox" />
